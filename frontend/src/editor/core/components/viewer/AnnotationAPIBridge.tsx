@@ -1,7 +1,11 @@
 import { useImperativeHandle, forwardRef, useCallback } from "react";
 import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
-import { PdfAnnotationSubtype, PdfAnnotationIcon } from "@embedpdf/models";
+import {
+  PdfAnnotationSubtype,
+  PdfAnnotationIcon,
+  PdfStandardFont,
+} from "@embedpdf/models";
 import type {
   AnnotationToolId,
   AnnotationToolOptions,
@@ -13,7 +17,10 @@ import type {
   ClearDocumentAnnotationsResult,
 } from "@editor/components/viewer/viewerTypes";
 import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
-import { MARKUP_ANNOTATION_COLORS } from "@editor/components/viewer/annotationDefaults";
+import {
+  MARKUP_ANNOTATION_COLORS,
+  toPdfStandardFont,
+} from "@editor/components/viewer/annotationDefaults";
 
 type NoteIcon = NonNullable<AnnotationToolOptions["icon"]>;
 
@@ -43,7 +50,7 @@ type AnnotationDefaults =
       type: PdfAnnotationSubtype.FREETEXT;
       fontColor?: string;
       fontSize?: number;
-      fontFamily?: string;
+      fontFamily?: PdfStandardFont | string;
       textAlign?: number;
       opacity?: number;
       color?: string;
@@ -197,7 +204,10 @@ const buildInkDefaults = (
   };
 };
 
-const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
+export const TOOL_DEFAULT_BUILDERS: Record<
+  AnnotationToolId,
+  ToolDefaultsBuilder
+> = {
   select: () => null,
   highlight: (options) => {
     const colorValue = options?.color ?? DEFAULTS.highlight;
@@ -246,7 +256,7 @@ const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
     type: PdfAnnotationSubtype.FREETEXT,
     fontColor: options?.color ?? DEFAULTS.text,
     fontSize: options?.fontSize ?? 14,
-    fontFamily: options?.fontFamily ?? "Helvetica",
+    fontFamily: toPdfStandardFont(options?.fontFamily),
     textAlign: options?.textAlign ?? 0,
     opacity: options?.opacity ?? 1,
     borderWidth: options?.thickness ?? 1,
@@ -261,7 +271,7 @@ const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
     return {
       type: PdfAnnotationSubtype.FREETEXT,
       fontColor,
-      fontFamily: options?.fontFamily ?? "Helvetica",
+      fontFamily: toPdfStandardFont(options?.fontFamily),
       textAlign: options?.textAlign ?? 0,
       fontSize: options?.fontSize ?? 12,
       opacity: options?.opacity ?? 1,
@@ -461,7 +471,11 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(
           const api = annotationApi as unknown as
             | AnnotationApiSurface
             | undefined;
-          api?.updateAnnotation?.(pageIndex, annotationId, patch);
+          const normalizedPatch =
+            patch.fontFamily !== undefined
+              ? { ...patch, fontFamily: toPdfStandardFont(patch.fontFamily) }
+              : patch;
+          api?.updateAnnotation?.(pageIndex, annotationId, normalizedPatch);
         },
         deactivateTools: () => {
           const api = annotationApi as unknown as
@@ -532,7 +546,16 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(
           const api = annotationApi as unknown as
             | AnnotationApiSurface
             | undefined;
-          api?.createAnnotation?.(pageIndex, annotation);
+          const normalizedAnnotation =
+            annotation.fontFamily !== undefined
+              ? {
+                  ...annotation,
+                  fontFamily: toPdfStandardFont(
+                    annotation.fontFamily as string | number,
+                  ),
+                }
+              : annotation;
+          api?.createAnnotation?.(pageIndex, normalizedAnnotation);
         },
 
         getSelectedAnnotations: () => {

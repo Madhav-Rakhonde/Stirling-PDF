@@ -13,6 +13,7 @@ import type {
   AnnotationObject,
   AnnotationPatch,
 } from "@editor/components/viewer/viewerTypes";
+import { toPdfStandardFont } from "@editor/components/viewer/annotationDefaults";
 import type { ScrollActions } from "@editor/contexts/viewer/viewerActions";
 import { openExternalTab } from "@editor/platform/openExternalTab";
 import { getExternalHref } from "@editor/utils/externalUrl";
@@ -262,7 +263,7 @@ export function useAnnotationMenuHandlers({
         patch.textColor = color;
         patch.fontColor = color;
         patch.fontSize = obj?.fontSize ?? 14;
-        patch.fontFamily = obj?.fontFamily ?? "Helvetica";
+        patch.fontFamily = toPdfStandardFont(obj?.fontFamily);
         patch.contents = obj?.contents ?? "";
       } else {
         patch.color = color;

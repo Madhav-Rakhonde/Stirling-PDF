@@ -1,3 +1,5 @@
+import type { PdfStandardFont } from "@embedpdf/models";
+
 export interface AnnotationRect {
   origin: { x: number; y: number };
   size: { width: number; height: number };
@@ -172,7 +174,7 @@ export interface AnnotationObject {
   lineWidth?: number;
   thickness?: number;
   fontSize?: number;
-  fontFamily?: string;
+  fontFamily?: PdfStandardFont | string;
   fontColor?: string;
   interiorColor?: string;
   textAlign?: number;
@@ -202,7 +204,7 @@ export interface AnnotationToolOptions {
   thickness?: number;
   borderWidth?: number;
   fontSize?: number;
-  fontFamily?: string;
+  fontFamily?: PdfStandardFont | string;
   textAlign?: number; // 0 = Left, 1 = Center, 2 = Right
   imageSrc?: string;
   imageSize?: { width: number; height: number };
